@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -13,8 +14,6 @@ class NativeAppController extends AbstractController
     {
         // TODO: REDIRECT (https://github.com/thephpleague/oauth2-github)
 
-        return $this->render('native_app/index.html.twig', [
-            'controller_name' => 'NativeAppController',
-        ]);
+        return new JsonResponse(['toto' => 'tata']);
     }
 }
