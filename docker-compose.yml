@@ -9,7 +9,7 @@ services:
     ports:
       - "${DOCKER_PORT_HTTP:-8080}:80"
     networks:
-      - default
+      - pim
   fpm:
     build:
       context: .
@@ -31,7 +31,7 @@ services:
     depends_on:
       database: { condition: service_healthy }
     networks:
-      - default
+      - pim
   php:
     build:
       context: .
@@ -55,7 +55,7 @@ services:
     depends_on:
       database: { condition: service_healthy }
     networks:
-      - default
+      - pim
   database:
     image: postgres:13
     environment:
@@ -80,7 +80,7 @@ services:
     ports:
       - "${DOCKER_PORT_POSTGRES:-5432}:5432"
     networks:
-      - default
+      - pim
   composer:
     build:
       context: .
@@ -95,6 +95,6 @@ services:
     restart: "no"
     scale: 0
 networks:
-  default: ~
+  pim: ~
 volumes:
   dbdata: ~

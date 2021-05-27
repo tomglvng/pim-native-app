@@ -13,16 +13,27 @@ use Psr\Http\Message\ResponseInterface;
  */
 class PimProvider extends AbstractProvider
 {
-    const PIM_DOMAIN = 'http://localhost:8080';
+    private string $pimUrl;
+
+    public function __construct( string $pimUrl, array $options = [], array $collaborators = [])
+    {
+        parent::__construct($options, $collaborators);
+        $this->pimUrl = $pimUrl;
+    }
+
+    public function setPimUrl(string $pimUrl)
+    {
+        $this->pimUrl = $pimUrl;
+    }
 
     public function getBaseAuthorizationUrl()
     {
-        return sprintf('%s/login/oauth2/authorize', self::PIM_DOMAIN);
+        return sprintf('%s/login/oauth2/authorize', $this->pimUrl);
     }
 
     public function getBaseAccessTokenUrl(array $params)
     {
-        return sprintf('%s/login/oauth2/access_token', self::PIM_DOMAIN);
+        return sprintf('%s/login/oauth2/access_token', $this->pimUrl);
     }
 
     public function getResourceOwnerDetailsUrl(AccessToken $token)

@@ -5,43 +5,72 @@ namespace App\Controller;
 use App\Provider\PimProvider;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class NativeAppController extends AbstractController
 {
-    #[Route('/activate', name: 'activate')]
-    public function activate(): Response
+    private string $clientId;
+    private string $clientSecret;
+    private string $appActivateUrl;
+
+    public function __construct(string $clientId, string $clientSecret, string $appUrl)
     {
+        $this->clientId = $clientId;
+        $this->clientSecret = $clientSecret;
+        $this->appActivateUrl = sprintf('%s/activate', $appUrl);
+    }
+
+    #[Route('/activate', name: 'activate')]
+    public function activate(
+        Request $request
+    ): Response {
         // TODO: REDIRECT (https://github.com/thephpleague/oauth2-github)
+        //dd($request);
 
-        $provider = new PimProvider([
-            'clientId' => '5_3mduyalq0iucc8840s888gckow8k0s4wc80s0kwkkogk4ccogw',
-            'clientSecret' => '40kd94hd8xicsk4g484ssoc4s4c8scsgkcgogw0w4c8oc8ogww',
-            'redirectUri' => 'http://localhost:8081/callback',
-        ]);
+        $code = $request->get('code');
+        $state = $request->get('state');
+        $session = $request->getSession();
 
-        if (!isset($_GET['code'])) {
+        if ($request->get('pim')) {
+            $session->set('pimurl', $request->get('pim'));
+        }
+
+        $provider = new PimProvider(
+            $session->get('pimurl'), [
+            'clientId' => $this->clientId,
+            'clientSecret' => $this->clientSecret,
+            'redirectUri' => $this->appActivateUrl,
+        ]
+        );
+
+
+        if (null === $code) {
             // If we don't have an authorization code then get one
             $authUrl = $provider->getAuthorizationUrl();
-            $_SESSION['oauth2state'] = $provider->getState();
-            header('Location: ' . $authUrl);
+            $session->set('oauth2state', $provider->getState());
+
+            header('Location: '.$authUrl);
             exit;
         }
 
         // Check given state against previously stored one to mitigate CSRF attack
-        if (empty($_GET['state']) || ($_GET['state'] !== $_SESSION['oauth2state'])) {
-            unset($_SESSION['oauth2state']);
+        if (empty($state) || ($state !== $session->get('oauth2state'))) {
+            $session->remove('oauth2state');
             exit('Invalid state');
         }
 
         // Try to get an access token (using the authorization code grant)
-        $token = $provider->getAccessToken('authorization_code', [
-            'code' => $_GET['code']
-        ]);
+        $token = $provider->getAccessToken(
+            'authorization_code',
+            [
+                'code' => $code,
+            ]
+        );
 
         // Optional: Now you have a token you can look up a users profile data
-        try {
+        /*try {
 
             // We got an access token, let's now get the user's details
             $user = $provider->getResourceOwner($token);
@@ -49,10 +78,10 @@ class NativeAppController extends AbstractController
 
             // Failed to get user details
             exit('Oh dear...');
-        }
+        }*/
 
         // Use this to interact with an API on the users behalf
-        echo $token->getToken();
+        //echo $token->getToken();
 
         return new JsonResponse(['token' => $token->getToken()]);
     }
