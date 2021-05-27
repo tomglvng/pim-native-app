@@ -13,8 +13,7 @@ class PimResourceOwner implements ResourceOwnerInterface
 {
     use ArrayAccessorTrait;
 
-    /** @var array  */
-    protected $response;
+    protected array $response;
 
     public function __construct(array $response = [])
     {
